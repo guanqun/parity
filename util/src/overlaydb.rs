@@ -190,107 +190,112 @@ impl HashDB for OverlayDB {
 	fn remove(&mut self, key: &H256) { self.overlay.remove(key); }
 }
 
-#[test]
-#[cfg_attr(feature="dev", allow(blacklisted_name))]
-fn overlaydb_revert() {
-	let mut m = OverlayDB::new_temp();
-	let foo = m.insert(b"foo");          // insert foo.
-	let mut batch = m.backing.transaction();
-	m.commit_to_batch(&mut batch).unwrap();  // commit - new operations begin here...
-	m.backing.write(batch).unwrap();
-	let bar = m.insert(b"bar");          // insert bar.
-	m.remove(&foo);                      // remove foo.
-	assert!(!m.contains(&foo));          // foo is gone.
-	assert!(m.contains(&bar));           // bar is here.
-	m.revert();                          // revert the last two operations.
-	assert!(m.contains(&foo));           // foo is here.
-	assert!(!m.contains(&bar));          // bar is gone.
-}
+#[cfg(test)]
+mod tests {
+	use super::*;
 
-#[test]
-fn overlaydb_overlay_insert_and_remove() {
-	let mut trie = OverlayDB::new_temp();
-	let h = trie.insert(b"hello world");
-	assert_eq!(trie.get(&h).unwrap(), DBValue::from_slice(b"hello world"));
-	trie.remove(&h);
-	assert_eq!(trie.get(&h), None);
-}
+	#[test]
+	#[cfg_attr(feature="dev", allow(blacklisted_name))]
+	fn overlaydb_revert() {
+		let mut m = OverlayDB::new_temp();
+		let foo = m.insert(b"foo");          // insert foo.
+		let mut batch = m.backing.transaction();
+		m.commit_to_batch(&mut batch).unwrap();  // commit - new operations begin here...
+		m.backing.write(batch).unwrap();
+		let bar = m.insert(b"bar");          // insert bar.
+		m.remove(&foo);                      // remove foo.
+		assert!(!m.contains(&foo));          // foo is gone.
+		assert!(m.contains(&bar));           // bar is here.
+		m.revert();                          // revert the last two operations.
+		assert!(m.contains(&foo));           // foo is here.
+		assert!(!m.contains(&bar));          // bar is gone.
+	}
 
-#[test]
-fn overlaydb_backing_insert_revert() {
-	let mut trie = OverlayDB::new_temp();
-	let h = trie.insert(b"hello world");
-	assert_eq!(trie.get(&h).unwrap(), DBValue::from_slice(b"hello world"));
-	trie.commit().unwrap();
-	assert_eq!(trie.get(&h).unwrap(), DBValue::from_slice(b"hello world"));
-	trie.revert();
-	assert_eq!(trie.get(&h).unwrap(), DBValue::from_slice(b"hello world"));
-}
+	#[test]
+	fn overlaydb_overlay_insert_and_remove() {
+		let mut trie = OverlayDB::new_temp();
+		let h = trie.insert(b"hello world");
+		assert_eq!(trie.get(&h).unwrap(), DBValue::from_slice(b"hello world"));
+		trie.remove(&h);
+		assert_eq!(trie.get(&h), None);
+	}
 
-#[test]
-fn overlaydb_backing_remove() {
-	let mut trie = OverlayDB::new_temp();
-	let h = trie.insert(b"hello world");
-	trie.commit().unwrap();
-	trie.remove(&h);
-	assert_eq!(trie.get(&h), None);
-	trie.commit().unwrap();
-	assert_eq!(trie.get(&h), None);
-	trie.revert();
-	assert_eq!(trie.get(&h), None);
-}
+	#[test]
+	fn overlaydb_backing_insert_revert() {
+		let mut trie = OverlayDB::new_temp();
+		let h = trie.insert(b"hello world");
+		assert_eq!(trie.get(&h).unwrap(), DBValue::from_slice(b"hello world"));
+		trie.commit().unwrap();
+		assert_eq!(trie.get(&h).unwrap(), DBValue::from_slice(b"hello world"));
+		trie.revert();
+		assert_eq!(trie.get(&h).unwrap(), DBValue::from_slice(b"hello world"));
+	}
 
-#[test]
-fn overlaydb_backing_remove_revert() {
-	let mut trie = OverlayDB::new_temp();
-	let h = trie.insert(b"hello world");
-	trie.commit().unwrap();
-	trie.remove(&h);
-	assert_eq!(trie.get(&h), None);
-	trie.revert();
-	assert_eq!(trie.get(&h).unwrap(), DBValue::from_slice(b"hello world"));
-}
+	#[test]
+	fn overlaydb_backing_remove() {
+		let mut trie = OverlayDB::new_temp();
+		let h = trie.insert(b"hello world");
+		trie.commit().unwrap();
+		trie.remove(&h);
+		assert_eq!(trie.get(&h), None);
+		trie.commit().unwrap();
+		assert_eq!(trie.get(&h), None);
+		trie.revert();
+		assert_eq!(trie.get(&h), None);
+	}
 
-#[test]
-fn overlaydb_negative() {
-	let mut trie = OverlayDB::new_temp();
-	let h = trie.insert(b"hello world");
-	trie.commit().unwrap();
-	trie.remove(&h);
-	trie.remove(&h);	//bad - sends us into negative refs.
-	assert_eq!(trie.get(&h), None);
-	assert!(trie.commit().is_err());
-}
+	#[test]
+	fn overlaydb_backing_remove_revert() {
+		let mut trie = OverlayDB::new_temp();
+		let h = trie.insert(b"hello world");
+		trie.commit().unwrap();
+		trie.remove(&h);
+		assert_eq!(trie.get(&h), None);
+		trie.revert();
+		assert_eq!(trie.get(&h).unwrap(), DBValue::from_slice(b"hello world"));
+	}
 
-#[test]
-fn overlaydb_complex() {
-	let mut trie = OverlayDB::new_temp();
-	let hfoo = trie.insert(b"foo");
-	assert_eq!(trie.get(&hfoo).unwrap(), DBValue::from_slice(b"foo"));
-	let hbar = trie.insert(b"bar");
-	assert_eq!(trie.get(&hbar).unwrap(), DBValue::from_slice(b"bar"));
-	trie.commit().unwrap();
-	assert_eq!(trie.get(&hfoo).unwrap(), DBValue::from_slice(b"foo"));
-	assert_eq!(trie.get(&hbar).unwrap(), DBValue::from_slice(b"bar"));
-	trie.insert(b"foo");	// two refs
-	assert_eq!(trie.get(&hfoo).unwrap(), DBValue::from_slice(b"foo"));
-	trie.commit().unwrap();
-	assert_eq!(trie.get(&hfoo).unwrap(), DBValue::from_slice(b"foo"));
-	assert_eq!(trie.get(&hbar).unwrap(), DBValue::from_slice(b"bar"));
-	trie.remove(&hbar);		// zero refs - delete
-	assert_eq!(trie.get(&hbar), None);
-	trie.remove(&hfoo);		// one ref - keep
-	assert_eq!(trie.get(&hfoo).unwrap(), DBValue::from_slice(b"foo"));
-	trie.commit().unwrap();
-	assert_eq!(trie.get(&hfoo).unwrap(), DBValue::from_slice(b"foo"));
-	trie.remove(&hfoo);		// zero ref - would delete, but...
-	assert_eq!(trie.get(&hfoo), None);
-	trie.insert(b"foo");	// one ref - keep after all.
-	assert_eq!(trie.get(&hfoo).unwrap(), DBValue::from_slice(b"foo"));
-	trie.commit().unwrap();
-	assert_eq!(trie.get(&hfoo).unwrap(), DBValue::from_slice(b"foo"));
-	trie.remove(&hfoo);		// zero ref - delete
-	assert_eq!(trie.get(&hfoo), None);
-	trie.commit().unwrap();	//
-	assert_eq!(trie.get(&hfoo), None);
+	#[test]
+	fn overlaydb_negative() {
+		let mut trie = OverlayDB::new_temp();
+		let h = trie.insert(b"hello world");
+		trie.commit().unwrap();
+		trie.remove(&h);
+		trie.remove(&h);	//bad - sends us into negative refs.
+		assert_eq!(trie.get(&h), None);
+		assert!(trie.commit().is_err());
+	}
+
+	#[test]
+	fn overlaydb_complex() {
+		let mut trie = OverlayDB::new_temp();
+		let hfoo = trie.insert(b"foo");
+		assert_eq!(trie.get(&hfoo).unwrap(), DBValue::from_slice(b"foo"));
+		let hbar = trie.insert(b"bar");
+		assert_eq!(trie.get(&hbar).unwrap(), DBValue::from_slice(b"bar"));
+		trie.commit().unwrap();
+		assert_eq!(trie.get(&hfoo).unwrap(), DBValue::from_slice(b"foo"));
+		assert_eq!(trie.get(&hbar).unwrap(), DBValue::from_slice(b"bar"));
+		trie.insert(b"foo");	// two refs
+		assert_eq!(trie.get(&hfoo).unwrap(), DBValue::from_slice(b"foo"));
+		trie.commit().unwrap();
+		assert_eq!(trie.get(&hfoo).unwrap(), DBValue::from_slice(b"foo"));
+		assert_eq!(trie.get(&hbar).unwrap(), DBValue::from_slice(b"bar"));
+		trie.remove(&hbar);		// zero refs - delete
+		assert_eq!(trie.get(&hbar), None);
+		trie.remove(&hfoo);		// one ref - keep
+		assert_eq!(trie.get(&hfoo).unwrap(), DBValue::from_slice(b"foo"));
+		trie.commit().unwrap();
+		assert_eq!(trie.get(&hfoo).unwrap(), DBValue::from_slice(b"foo"));
+		trie.remove(&hfoo);		// zero ref - would delete, but...
+		assert_eq!(trie.get(&hfoo), None);
+		trie.insert(b"foo");	// one ref - keep after all.
+		assert_eq!(trie.get(&hfoo).unwrap(), DBValue::from_slice(b"foo"));
+		trie.commit().unwrap();
+		assert_eq!(trie.get(&hfoo).unwrap(), DBValue::from_slice(b"foo"));
+		trie.remove(&hfoo);		// zero ref - delete
+		assert_eq!(trie.get(&hfoo), None);
+		trie.commit().unwrap();	//
+		assert_eq!(trie.get(&hfoo), None);
+	}
 }
