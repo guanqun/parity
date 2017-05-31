@@ -44,7 +44,7 @@ pub struct Account {
 	storage_changes: HashMap<H256, H256>,
 	// Code hash of the account.
 	code_hash: H256,
-	// Size of the accoun code.
+	// Size of the account code.
 	code_size: Option<usize>,
 	// Code cache of the account.
 	code_cache: Arc<Bytes>,
