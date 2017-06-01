@@ -189,7 +189,7 @@ impl Discovery {
 	fn start(&mut self) {
 		trace!(target: "discovery", "Starting discovery");
 		self.discovery_round = 0;
-		self.discovery_id.randomize(); //TODO: use cryptographic nonce
+		self.discovery_id.randomize(); //TODO: use cryptographic nonce // use rand crate??
 		self.discovery_nodes.clear();
 	}
 

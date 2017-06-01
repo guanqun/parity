@@ -83,8 +83,8 @@ impl fmt::Display for DisconnectReason {
 	}
 }
 
-#[derive(Debug)]
 /// Network error.
+#[derive(Debug)]
 pub enum NetworkError {
 	/// Authentication error.
 	Auth,

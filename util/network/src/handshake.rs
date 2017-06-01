@@ -288,7 +288,7 @@ impl Handshake {
 	/// Sends ack message
 	fn write_ack<Message>(&mut self, io: &IoContext<Message>) -> Result<(), NetworkError> where Message: Send + Clone + Sync + 'static {
 		trace!(target: "network", "Sending handshake ack to {:?}", self.connection.remote_addr_str());
-		let mut data = [0u8; 1 + /*Public::SIZE*/ 64 + /*H256::SIZE*/ 32]; //TODO: use associated constants
+		let mut data = [0u8; 1 + /*Public::SIZE*/ 64 + /*H256::SIZE*/ 32]; //TODO: use associated constants looks easy.
 		let len = data.len();
 		{
 			data[len - 1] = 0x0;
