@@ -33,7 +33,7 @@ use super::JournalDB;
 /// the removals actually take effect.
 ///
 /// There are two memory overlays:
-/// - Transaction overlay contains current transaction data. It is merged with with history
+/// - Transaction overlay contains current transaction data. It is merged with history
 /// overlay on each `commit()`
 /// - History overlay contains all data inserted during the history period. When the node
 /// in the overlay becomes ancient it is written to disk on `commit()`
