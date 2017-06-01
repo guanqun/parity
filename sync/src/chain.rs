@@ -167,8 +167,8 @@ const FORK_HEADER_TIMEOUT_SEC: u64 = 3;
 const SNAPSHOT_MANIFEST_TIMEOUT_SEC: u64 = 5;
 const SNAPSHOT_DATA_TIMEOUT_SEC: u64 = 120;
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 /// Sync state
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub enum SyncState {
 	/// Collecting enough peers to start syncing.
 	WaitingPeers,
@@ -246,8 +246,8 @@ impl SyncStatus {
 	}
 }
 
-#[derive(PartialEq, Eq, Debug, Clone)]
 /// Peer data type requested
+#[derive(PartialEq, Eq, Debug, Clone)]
 enum PeerAsking {
 	Nothing,
 	ForkHeader,
@@ -258,14 +258,15 @@ enum PeerAsking {
 	SnapshotData,
 }
 
-#[derive(PartialEq, Eq, Debug, Clone, Copy)]
 /// Block downloader channel.
+#[derive(PartialEq, Eq, Debug, Clone, Copy)]
 enum BlockSet {
 	/// New blocks better than out best blocks
 	NewBlocks,
 	/// Missing old blocks
 	OldBlocks,
 }
+
 #[derive(Clone, Eq, PartialEq)]
 enum ForkConfirmation {
 	/// Fork block confirmation pending.
@@ -276,8 +277,8 @@ enum ForkConfirmation {
 	Confirmed,
 }
 
-#[derive(Clone)]
 /// Syncing peer information
+#[derive(Clone)]
 struct PeerInfo {
 	/// eth protocol version
 	protocol_version: u8,
